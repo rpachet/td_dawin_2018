@@ -22,9 +22,9 @@ class Produit
     private $id;
 
     /**
-     * @var int
+     * @var string
      *
-     * @ORM\Column(name="code_barre", type="integer")
+     * @ORM\Column(name="code_barre", type="string")
      */
     private $codeBarre;
 
@@ -125,4 +125,3 @@ class Produit
         return $this->dateDerniereVue;
     }
 }
-

@@ -8,6 +8,7 @@ use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use AppBundle\Form\CodeBarreType;
+use AppBundle\Entity\Produit;
 
 class DefaultController extends Controller
 {
@@ -30,6 +31,7 @@ class DefaultController extends Controller
      */
     public function searchAction(Request $request)
     {
+
         $form = $this->createForm(CodeBarreType::class);
         $form->handleRequest($request);
 
@@ -39,9 +41,27 @@ class DefaultController extends Controller
             $url = 'https://fr.openfoodfacts.org/api/v0/produit/'.$code_barre.'.json';
             $data = json_decode(file_get_contents($url), true);
 
+            // Test si le produit existe dans l'api
             if ($data['status'] == 1) {
+              // EntityManager
+              $em = $this->get('doctrine')->getManager();
+
               $data['product']['product_name']."\n";
-              
+              //tester si le produit existe dans la bdd
+              $produit_get = $em->getRepository(Produit::class)->findBy(
+                array('codeBarre' => $code_barre)
+              );
+
+              if ($produit_get == null) {
+                // Créer un nouveau produ dans la bdd
+                $produit = new Produit();
+                $produit->setCodeBarre($code_barre);
+                $produit->setNbConsultations('1');
+                $produit->setDateDerniereVue(new \DateTime());
+                $em->persist($produit);
+                $em->flush();
+              }
+
               return $this->redirectToRoute('product');
             }
 
