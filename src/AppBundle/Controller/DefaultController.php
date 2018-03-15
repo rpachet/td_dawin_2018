@@ -36,6 +36,16 @@ class DefaultController extends Controller
         if ($form->isSubmitted() && $form->isValid()) {
             $data = $form->getData();
             $code_barre = $data['code_barre'];
+            $url = 'https://fr.openfoodfacts.org/api/v0/produit/'.$code_barre.'.json';
+            $data = json_decode(file_get_contents($url), true);
+
+            if ($data['status'] == 1) {
+              $data['product']['product_name']."\n";
+              
+              return $this->redirectToRoute('product');
+            }
+
+            // echo $data['product']['product_name']."\n";
 
             // XXX: A faire, chercher si le produit existe, le créer en
             // base et rediriger le visiteur vers la fiche produit
