@@ -1,30 +1,28 @@
 {% extends 'layout.html.twig' %}
 
 {% block header_title %}
-    Fiche produit "Nutella"
+    Fiche produit "{{name}}"
 {% endblock %}
 
 {% block contents %}
 <div class="row">
     <div class="col-sm-4">
-    <img src="{{ asset('theme/img/nutella.jpg') }}" />
+    <img src="{{image}}" />
+    <p><b>nombre de vue : </b>{{nb_view}}</p>
     </div>
     <div class="col-sm-8">
-        <h3>Nutella</h3>
-        <h4>Code barre 3017620421006</h4>
+        <h3>{{name}} - {{brand}}</h3>
+        <h4>Code barre {{code_barre}}</h4>
         <hr />
         <p>
-            <b>Quantité:</b> 750g <br/>
+            <b>Quantité:</b> {{quantity}} <br/>
         </p>
         <p>
             <b>Ingrédients:</b>
             <ul>
-                <li>Sucre</li>
-                <li>Huile de palme</li>
-                <li>noisettes 13%</li>
-                <li>cacao maigre 7,4%</li>
-                <li>lait écrémé en poudre 6,6%</li>
-                <li>lactosérum en poudre</li>
+              {% for ingredient in ingredients %}
+                <li>{{ ingredient.text|replace({"_": " "}) }}</li>
+              {% endfor %}
             </ul>
         </p>
     </div>

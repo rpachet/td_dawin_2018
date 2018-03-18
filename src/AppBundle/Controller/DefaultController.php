@@ -61,8 +61,18 @@ class DefaultController extends Controller
                 $em->persist($produit);
                 $em->flush();
               }
-
-              return $this->redirectToRoute('product');
+              else{
+                $produit_get = $em->getRepository(Produit::class)->findOneBy(
+                  array('codeBarre' => $code_barre)
+                );
+                $nb_view = $produit_get->getNbConsultations();
+                $nb_view++;
+                $produit_get->setNbConsultations($nb_view);
+                $produit_get->setDateDerniereVue(new \DateTime());
+                $em->persist($produit_get);
+                $em->flush();
+              }
+              return $this->redirectToRoute('product',array("code_barre" => $code_barre));
             }
 
             // echo $data['product']['product_name']."\n";
@@ -79,11 +89,35 @@ class DefaultController extends Controller
     }
 
     /**
-     * @Route("/product/", name="product")
+     * @Route("/product/{code_barre}", name="product")
      * @Template("product.html.twig")
      */
-    public function productAction()
+    public function productAction($code_barre)
     {
-        return [];
+      $url = 'https://fr.openfoodfacts.org/api/v0/produit/'.$code_barre.'.json';
+      $data = json_decode(file_get_contents($url), true);
+      $name = $data['product']['product_name_fr'];
+      $brand = $data['product']['brands'];
+      $image = $data['product']['image_front_url'];
+      $quantity = $data['product']['quantity'];
+      $ingredients = $data['product']['ingredients'];
+
+      $em = $this->get('doctrine')->getManager();
+
+      $produit_get = $em->getRepository(Produit::class)->findOneBy(
+        array('codeBarre' => $code_barre)
+      );
+      $nb_view = $produit_get->getNbConsultations();
+
+
+        return$this->render('product.html.twig', array(
+          'code_barre' => $code_barre,
+          'name'        => $name,
+          'brand'       => $brand,
+          'image'       => $image,
+          'quantity'    => $quantity,
+          'ingredients' => $ingredients,
+          'nb_view'     => $nb_view,
+        ));
     }
 }
