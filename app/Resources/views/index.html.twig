@@ -41,11 +41,11 @@
         <h2>Consultés récemment</h2>
     </div>
 
-    {% for p in 1..8 %}
+    {% for produit in dernier_produits %}
     <div class="product col-lg-3 p-1">
-        <img src="{{ asset('theme/img/nutella.jpg') }}" /><br />
+        <img src="{{produit['image']}}" /><br />
         <p>
-            Nutella 500g
+        <a href="product/{{produit['codeBarre']}}">  {{produit['nom']}}
         </p>
     </div>
     {% endfor %}

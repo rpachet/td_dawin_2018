@@ -20,8 +20,31 @@ class DefaultController extends Controller
     {
         $form = $this->createForm(CodeBarreType::class);
 
+        $em = $this->get('doctrine')->getManager();
+
+        // $produit_get = $em->getRepository(Produit::class);
+        // $produits = $produit_get->findAll();
+        // vard_dump($produits);
+        // die();
+        $qb = $this->get('doctrine')->getManager()->createQueryBuilder();
+
+        $qb->select( 'e' )
+        ->from( 'AppBundle:Produit',  'e' )
+        ->orderBy('e.dateDerniereVue', 'desc')
+        ->setMaxResults(8);
+        $name = [];
+
+        $produits = $qb->getQuery()->getResult();
+        foreach ($produits as $key => $produit) {
+          $code_barre =$produit->getCodeBarre();
+          $url = 'https://fr.openfoodfacts.org/api/v0/produit/'.$code_barre.'.json';
+          $data = json_decode(file_get_contents($url), true);
+          array_push($name, ["codeBarre" => $code_barre, "nom" => $data['product']['product_name'], "image" => $data['product']['image_small_url']]);
+        }
+
         return [
-            'form' => $form->createView()
+            'form'      => $form->createView(),
+            'dernier_produits' => $name
         ];
     }
 
@@ -56,22 +79,12 @@ class DefaultController extends Controller
                 // Créer un nouveau produ dans la bdd
                 $produit = new Produit();
                 $produit->setCodeBarre($code_barre);
-                $produit->setNbConsultations('1');
+                $produit->setNbConsultations('0');
                 $produit->setDateDerniereVue(new \DateTime());
                 $em->persist($produit);
                 $em->flush();
               }
-              else{
-                $produit_get = $em->getRepository(Produit::class)->findOneBy(
-                  array('codeBarre' => $code_barre)
-                );
-                $nb_view = $produit_get->getNbConsultations();
-                $nb_view++;
-                $produit_get->setNbConsultations($nb_view);
-                $produit_get->setDateDerniereVue(new \DateTime());
-                $em->persist($produit_get);
-                $em->flush();
-              }
+
               return $this->redirectToRoute('product',array("code_barre" => $code_barre));
             }
 
@@ -108,9 +121,19 @@ class DefaultController extends Controller
         array('codeBarre' => $code_barre)
       );
       $nb_view = $produit_get->getNbConsultations();
+      $nb_view++;
+      $produit_get->setNbConsultations($nb_view);
+      $produit_get->setDateDerniereVue(new \DateTime());
+      $em->persist($produit_get);
+      $em->flush();
+
+      $produit_get = $em->getRepository(Produit::class)->findOneBy(
+        array('codeBarre' => $code_barre)
+      );
+      $nb_view = $produit_get->getNbConsultations();
 
 
-        return$this->render('product.html.twig', array(
+        return [
           'code_barre' => $code_barre,
           'name'        => $name,
           'brand'       => $brand,
@@ -118,6 +141,6 @@ class DefaultController extends Controller
           'quantity'    => $quantity,
           'ingredients' => $ingredients,
           'nb_view'     => $nb_view,
-        ));
+        ];
     }
 }
