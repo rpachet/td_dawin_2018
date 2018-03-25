@@ -10,4 +10,17 @@ namespace AppBundle\Repository;
  */
 class ProduitRepository extends \Doctrine\ORM\EntityRepository
 {
+
+  public function findEvaluation($produit, $user){
+    return $this->getEntityManager()
+    ->createQuery(
+        'SELECT e, u
+        FROM AppBundle:Evaluation e
+        JOIN e.produit u
+        WHERE e.produit = :produit AND e.user = :user'
+      )
+      ->setParameter('produit', $produit)
+      ->setParameter('user', $user)
+      ->getResult();
+  }
 }

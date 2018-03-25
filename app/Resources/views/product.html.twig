@@ -1,30 +1,45 @@
 {% extends 'layout.html.twig' %}
 
 {% block header_title %}
-    Fiche produit "{{name}}"
+    Fiche produit "{{produit["name"]}}"
 {% endblock %}
 
 {% block contents %}
 <div class="row">
     <div class="col-sm-4">
-    <img src="{{image}}" />
+      <img src="{{produit['image']}}" />
     <p><b>nombre de vue : </b>{{nb_view}}</p>
     </div>
     <div class="col-sm-8">
-        <h3>{{name}} - {{brand}}</h3>
-        <h4>Code barre {{code_barre}}</h4>
+        <h3>{{produit["name"]}} - {{produit["brands"]}}</h3>
+        <h4>Code barre {{produit["code_barre"]}}</h4>
         <hr />
         <p>
-            <b>Quantité:</b> {{quantity}} <br/>
+            <b>Quantité:</b> {{produit["quantity"]}} <br/>
         </p>
         <p>
             <b>Ingrédients:</b>
             <ul>
-              {% for ingredient in ingredients %}
+              {% for ingredient in produit["ingredients"] %}
                 <li>{{ ingredient.text|replace({"_": " "}) }}</li>
               {% endfor %}
             </ul>
         </p>
     </div>
 </div>
+<hr/>
+
+{% if produit['user'] == true and produit['evaluation'] == false %}
+  <form method="post" action="{{ path('product',{'code_barre':produit["code_barre"]}) }}">
+    {{ form_widget(form) }}
+      <input type="submit" class="btn btn-primary" value="Send" />
+    {{ form_end(form) }}
+  </form>
+{% elseif produit['user']== true and produit['evaluation'] == true %}
+  <p>commentaire : {{commentaire}}</p>
+  <p>note : {{note}}</p>
+{% else %}
+
+{% endif %}
+
 {% endblock %}

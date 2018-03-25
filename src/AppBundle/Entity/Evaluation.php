@@ -35,6 +35,15 @@ class Evaluation
      */
     private $note;
 
+    /**
+    * @ORM\ManyToOne(targetEntity="User")
+    */
+    private $user;
+
+    /**
+    * @ORM\ManyToOne(targetEntity="Produit" )
+    */
+    private $produit;
 
     /**
      * Get id
@@ -93,5 +102,45 @@ class Evaluation
     {
         return $this->note;
     }
-}
 
+    /**
+     * Set user
+     *
+     * @param User $user
+     */
+    public function setUser($user)
+    {
+      $this->user = $user;
+    }
+
+    /**
+     * Get user
+     *
+     * @return User
+     */
+     public function getUser()
+     {
+       return $this->user;
+     }
+
+     /**
+      * Set produit
+      *
+      * @param Produit $produit
+      */
+     public function setProduit($produit)
+     {
+       $this->produit = $produit;
+     }
+
+     /**
+      * Get produit
+      *
+      * @return Produit
+      */
+      public function getProduit()
+      {
+        return $this->produit;
+      }
+
+}

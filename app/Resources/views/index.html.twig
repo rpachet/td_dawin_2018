@@ -10,7 +10,7 @@
         <div class="site-heading">
           <h1>1, 2, 3... évaluez!</h1>
           <span class="subheading">Recherchez un produit par code barre</span>
-          {<form method="post" action="{{ path('search') }}">
+          <form method="post" action="{{ path('search') }}">
               {{ form_widget(form.code_barre) }}
               <input type="submit" class="btn btn-primary" value="Go!" />
               {{ form_end(form) }}
@@ -32,7 +32,7 @@
     <div class="product col-lg-3 p-1">
         <img src="{{ asset('theme/img/nutella.jpg') }}" /><br />
         <p>
-            <a href="product/3017620421006">Nutella 750g</a>
+            <a href="{{ path('product',{'code_barre':'3017620421006'}) }}">Nutella 750g</a>
         </p>
     </div>
     {% endfor %}
@@ -45,7 +45,7 @@
     <div class="product col-lg-3 p-1">
         <img src="{{produit['image']}}" /><br />
         <p>
-        <a href="product/{{produit['codeBarre']}}">  {{produit['nom']}}
+        <a href="{{ path('product',{'code_barre':produit['codeBarre']}) }}">  {{produit['nom']}}
         </p>
     </div>
     {% endfor %}

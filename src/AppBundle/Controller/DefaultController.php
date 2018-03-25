@@ -8,10 +8,21 @@ use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use AppBundle\Form\CodeBarreType;
+use AppBundle\Form\EvaluationType;
 use AppBundle\Entity\Produit;
+use AppBundle\Entity\Evaluation;
+
 
 class DefaultController extends Controller
 {
+
+
+    private function getApi($codeBarre){
+      $url = 'https://fr.openfoodfacts.org/api/v0/produit/'.$codeBarre.'.json';
+      $data = json_decode(file_get_contents($url), true);
+      return $data;
+    }
+
     /**
      * @Route("/", name="homepage")
      * @Template("index.html.twig")
@@ -22,10 +33,7 @@ class DefaultController extends Controller
 
         $em = $this->get('doctrine')->getManager();
 
-        // $produit_get = $em->getRepository(Produit::class);
-        // $produits = $produit_get->findAll();
-        // vard_dump($produits);
-        // die();
+
         $qb = $this->get('doctrine')->getManager()->createQueryBuilder();
 
         $qb->select( 'e' )
@@ -37,8 +45,8 @@ class DefaultController extends Controller
         $produits = $qb->getQuery()->getResult();
         foreach ($produits as $key => $produit) {
           $code_barre =$produit->getCodeBarre();
-          $url = 'https://fr.openfoodfacts.org/api/v0/produit/'.$code_barre.'.json';
-          $data = json_decode(file_get_contents($url), true);
+          $data = $this->getApi($code_barre);
+
           array_push($name, ["codeBarre" => $code_barre, "nom" => $data['product']['product_name'], "image" => $data['product']['image_small_url']]);
         }
 
@@ -61,8 +69,7 @@ class DefaultController extends Controller
         if ($form->isSubmitted() && $form->isValid()) {
             $data = $form->getData();
             $code_barre = $data['code_barre'];
-            $url = 'https://fr.openfoodfacts.org/api/v0/produit/'.$code_barre.'.json';
-            $data = json_decode(file_get_contents($url), true);
+            $data = $this->getApi($code_barre);
 
             // Test si le produit existe dans l'api
             if ($data['status'] == 1) {
@@ -102,18 +109,22 @@ class DefaultController extends Controller
     }
 
     /**
-     * @Route("/product/{code_barre}", name="product")
+     * @Route("/product/", name="product")
      * @Template("product.html.twig")
      */
-    public function productAction($code_barre)
+    public function productAction(Request $request)
     {
-      $url = 'https://fr.openfoodfacts.org/api/v0/produit/'.$code_barre.'.json';
-      $data = json_decode(file_get_contents($url), true);
-      $name = $data['product']['product_name_fr'];
-      $brand = $data['product']['brands'];
-      $image = $data['product']['image_front_url'];
-      $quantity = $data['product']['quantity'];
-      $ingredients = $data['product']['ingredients'];
+      $request = Request::createFromGlobals();
+      $code_barre = $request->query->get('code_barre');
+      $data = $this->getApi($code_barre);
+
+      $produit = [];
+      $produit['code_barre'] = $code_barre;
+      $produit['name'] = $data['product']['product_name_fr'];
+      $produit['brands'] = $data['product']['brands'];
+      $produit['image'] = $data['product']['image_front_url'];
+      $produit['quantity'] = $data['product']['quantity'];
+      $produit['ingredients'] = $data['product']['ingredients'];
 
       $em = $this->get('doctrine')->getManager();
 
@@ -132,15 +143,66 @@ class DefaultController extends Controller
       );
       $nb_view = $produit_get->getNbConsultations();
 
+// =============================================================================
+//                          Create evaluation
+// =============================================================================
 
+      // Create Form
+      $form = $this->createForm(EvaluationType::class);
+      $form->handleRequest($request);
+
+      if ($form->isSubmitted() && $form->isValid()) {
+        $data = $form->getData();
+        $commentaire = $data['commentaire'];
+        // var_dump ($commentaire);
+        // die();
+        $note = $data['note'];
+
+        // var_dump ($this->getUser());
+        // die();
+
+        $evaluation = new Evaluation();
+        $evaluation->setCommentaire($commentaire);
+        $evaluation->setNote($note);
+        $evaluation->setUser($this->getUser());
+        $evaluation->setProduit($produit_get);
+        $em->persist($evaluation);
+        $em->flush();
+      }
+      $produitRepository = $em->getRepository('AppBundle:Produit');
+      $getEvaluation = $produitRepository->findEvaluation($produit_get, $this->getUser());
+
+      // user is connected and no evaluation
+      if (!$getEvaluation && $this->getUser()) {
+        $produit['user'] = true;
+        $produit['evaluation'] = false;
         return [
-          'code_barre' => $code_barre,
-          'name'        => $name,
-          'brand'       => $brand,
-          'image'       => $image,
-          'quantity'    => $quantity,
-          'ingredients' => $ingredients,
+          'form'        => $form->createView(),
+          'produit'     => $produit,
           'nb_view'     => $nb_view,
         ];
+
+      // user is connected and evaluation
+      } elseif ($getEvaluation && $this->getUser()) {
+        $produit['user'] = true;
+        $produit['evaluation'] = true;
+        return [
+          'form'        => $form->createView(),
+          'produit'     => $produit,
+          'nb_view'     => $nb_view,
+          'commentaire' => $getEvaluation[0]->getCommentaire(),
+          'note' => $getEvaluation[0]->getNote()
+        ];
+      // user disconnected
+      } else {
+        $produit['user'] =false;
+
+        return [
+          'form'        => $form->createView(),
+          'produit'     => $produit,
+          'nb_view'     => $nb_view,
+        ];
+      }
     }
+
 }
