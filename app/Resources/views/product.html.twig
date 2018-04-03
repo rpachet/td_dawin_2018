@@ -27,6 +27,10 @@
         </p>
     </div>
 </div>
+<p>
+<b>Note produit : </b>
+{{product_note}}
+</p>
 <hr/>
 
 {% if produit['user'] == true and produit['evaluation'] == false %}
@@ -38,7 +42,6 @@
 {% elseif produit['user']== true and produit['evaluation'] == true %}
   <p>commentaire : {{commentaire}}</p>
   <p>note : {{note}}</p>
-{% else %}
 
 {% endif %}
 

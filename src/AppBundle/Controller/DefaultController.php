@@ -47,7 +47,7 @@ class DefaultController extends Controller
           $code_barre =$produit->getCodeBarre();
           $data = $this->getApi($code_barre);
 
-          array_push($name, ["codeBarre" => $code_barre, "nom" => $data['product']['product_name'], "image" => $data['product']['image_small_url']]);
+          array_push($name, ["codeBarre" => $code_barre, "nom" => $data['product']['product_name'], "image" => $data['product']['image_thumb_url']]);
         }
 
         return [
@@ -144,6 +144,21 @@ class DefaultController extends Controller
       $nb_view = $produit_get->getNbConsultations();
 
 // =============================================================================
+//                          Note
+// =============================================================================
+      $sum = 0;
+      $i = 0;
+
+      $getAll_note = $em->getRepository(Evaluation::class)->findBy(
+        array('produit' => $produit_get)
+      );
+      foreach ($getAll_note as $key => $produits) {
+        $sum = $sum + $produits->getNote();
+        $i++;
+      }
+      $note = $sum/$i;
+
+// =============================================================================
 //                          Create evaluation
 // =============================================================================
 
@@ -177,9 +192,10 @@ class DefaultController extends Controller
         $produit['user'] = true;
         $produit['evaluation'] = false;
         return [
-          'form'        => $form->createView(),
-          'produit'     => $produit,
-          'nb_view'     => $nb_view,
+          'form'         => $form->createView(),
+          'produit'      => $produit,
+          'nb_view'      => $nb_view,
+          'product_note' => $note,
         ];
 
       // user is connected and evaluation
@@ -191,7 +207,8 @@ class DefaultController extends Controller
           'produit'     => $produit,
           'nb_view'     => $nb_view,
           'commentaire' => $getEvaluation[0]->getCommentaire(),
-          'note' => $getEvaluation[0]->getNote()
+          'note'        => $getEvaluation[0]->getNote(),
+          'product_note' => $note,
         ];
       // user disconnected
       } else {
@@ -201,6 +218,7 @@ class DefaultController extends Controller
           'form'        => $form->createView(),
           'produit'     => $produit,
           'nb_view'     => $nb_view,
+          'product_note' => $note,
         ];
       }
     }
