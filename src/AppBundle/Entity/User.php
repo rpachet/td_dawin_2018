@@ -39,10 +39,19 @@ class User extends BaseUser
      */
     private $sexe;
 
+    /**
+     * @var ArrayCollection $evaluations
+     *
+     * @ORM\OneToMany(targetEntity="Evaluation", mappedBy="user", cascade={"persist","remove","merge"})
+     */
+    private $evaluations;
+
     public function __construct()
     {
         parent::__construct();
         // your own logic
+        $this->evaluations = new ArrayCollection();
+
     }
 
     /**
@@ -115,5 +124,24 @@ class User extends BaseUser
     public function getSexe()
     {
         return $this->sexe;
+    }
+
+    /**
+     * Get evaluation
+     *
+     */
+    public function getEvaluations()
+    {
+        return $this->evaluations;
+    }
+
+    /**
+     * Add evaluation
+     *
+     */
+    public function addEvaluation($evaluation)
+    {
+      $evaluation->setUser($this);
+      $this->evaluations->add($evaluation);
     }
 }

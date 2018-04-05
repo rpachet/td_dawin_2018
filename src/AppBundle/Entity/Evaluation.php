@@ -36,12 +36,14 @@ class Evaluation
     private $note;
 
     /**
-    * @ORM\ManyToOne(targetEntity="User")
+    * @ORM\ManyToOne(targetEntity="User", inversedBy="evaluations", cascade={"persist","merge"})
+    * @ORM\JoinColumn(name="user_id", referencedColumnName="id")
     */
     private $user;
 
     /**
-    * @ORM\ManyToOne(targetEntity="Produit" )
+    * @ORM\ManyToOne(targetEntity="Produit", inversedBy="evaluations", cascade={"persist","merge"})
+    * @ORM\JoinColumn(name="produit_id", referencedColumnName="id")
     */
     private $produit;
 

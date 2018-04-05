@@ -3,6 +3,8 @@
 namespace AppBundle\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
+use DoctrineCommonCollectionsArrayCollection;
+
 
 /**
  * Produit
@@ -42,6 +44,18 @@ class Produit
      */
     private $dateDerniereVue;
 
+
+    /**
+     * @var ArrayCollection $evaluations
+     *
+     * @ORM\OneToMany(targetEntity="Evaluation", mappedBy="produit", cascade={"persist","remove","merge"})
+     */
+    private $evaluations;
+
+
+    public function __construct(){
+      $this->evaluations = new ArrayCollection();
+    }
 
     /**
      * Get id
@@ -123,5 +137,24 @@ class Produit
     public function getDateDerniereVue()
     {
         return $this->dateDerniereVue;
+    }
+
+    /**
+     * Get evaluation
+     *
+     */
+    public function getEvaluations()
+    {
+        return $this->evaluations;
+    }
+
+    /**
+     * Add evaluation
+     *
+     */
+    public function addEvaluation($evaluation)
+    {
+      $evaluation->setProduit($this);
+      $this->evaluations->add($evaluation);
     }
 }

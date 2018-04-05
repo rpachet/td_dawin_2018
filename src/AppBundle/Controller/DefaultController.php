@@ -29,30 +29,39 @@ class DefaultController extends Controller
      */
     public function indexAction(Request $request)
     {
+        $produitRepository = $em->getRepository('AppBundle:Produit');
+
+        $evaluationRepository = $em->getRepository('AppBundle:Evaluation');
+
         $form = $this->createForm(CodeBarreType::class);
 
         $em = $this->get('doctrine')->getManager();
 
 
-        $qb = $this->get('doctrine')->getManager()->createQueryBuilder();
-
-        $qb->select( 'e' )
-        ->from( 'AppBundle:Produit',  'e' )
-        ->orderBy('e.dateDerniereVue', 'desc')
-        ->setMaxResults(8);
-        $name = [];
-
-        $produits = $qb->getQuery()->getResult();
-        foreach ($produits as $key => $produit) {
+        $Last = $produitRepository->findProductLast();
+        $nameLast = [];
+        foreach ($Last as $key => $produit) {
           $code_barre =$produit->getCodeBarre();
           $data = $this->getApi($code_barre);
 
-          array_push($name, ["codeBarre" => $code_barre, "nom" => $data['product']['product_name'], "image" => $data['product']['image_thumb_url']]);
+          array_push($nameLast, ["codeBarre" => $code_barre, "nom" => $data['product']['product_name'], "image" => $data['product']['image_thumb_url']]);
         }
+
+        $Eval = $evaluationRepository->findProductEval();
+        $nameEval = [];
+
+        foreach ($Eval as $key => $produit) {
+          $code_barre =$produit->getCodeBarre();
+          $data = $this->getApi($code_barre);
+
+          array_push($nameEval, ["codeBarre" => $code_barre, "nom" => $data['product']['product_name'], "image" => $data['product']['image_thumb_url']]);
+        }
+
 
         return [
             'form'      => $form->createView(),
-            'dernier_produits' => $name
+            'dernier_produits' => $nameLast,
+            'eval_produits' => $nameEval
         ];
     }
 
@@ -114,6 +123,8 @@ class DefaultController extends Controller
      */
     public function productAction(Request $request)
     {
+      $produitRepository = $em->getRepository('AppBundle:Produit');
+
       $request = Request::createFromGlobals();
       $code_barre = $request->query->get('code_barre');
       $data = $this->getApi($code_barre);
@@ -146,29 +157,41 @@ class DefaultController extends Controller
 // =============================================================================
 //                          Note
 // =============================================================================
-      $sum = 0;
-      $i = 0;
+      // $sum = 0;
+      // $i = 0;
+      //
+      // $getAll_note = $em->getRepository(Evaluation::class)->findBy(
+      //   array('produit' => $produit_get)
+      // );
+      // foreach ($getAll_note as $key => $produits) {
+      //   $sum = $sum + $produits->getNote();
+      //   $i++;
+      // }
+      // $note = $sum/$i;
 
-      $getAll_note = $em->getRepository(Evaluation::class)->findBy(
-        array('produit' => $produit_get)
-      );
-      foreach ($getAll_note as $key => $produits) {
-        $sum = $sum + $produits->getNote();
-        $i++;
-      }
-      $note = $sum/$i;
+
+      $note = $produitRepository->getNote($produit_get);
+
 
 // =============================================================================
 //                          Create evaluation
 // =============================================================================
 
       // Create Form
-      $form = $this->createForm(EvaluationType::class);
+      $evaluation = new Evaluation();
+      $form = $this->createForm(EvaluationType::class, $evaluation);
       $form->handleRequest($request);
 
       if ($form->isSubmitted() && $form->isValid()) {
-        $data = $form->getData();
-        $commentaire = $data['commentaire'];
+        $evaluation = $form->getData();
+        $user = $this->getUser();
+        $produit_get->addEvaluation($evaluation);
+        $user->addEvaluation($evaluation);
+        $em->persist($produit_get);
+        $em->persist($user);
+        $em->flush();
+
+        // $commentaire = $data['commentaire'];
         // var_dump ($commentaire);
         // die();
         $note = $data['note'];
@@ -176,15 +199,14 @@ class DefaultController extends Controller
         // var_dump ($this->getUser());
         // die();
 
-        $evaluation = new Evaluation();
-        $evaluation->setCommentaire($commentaire);
-        $evaluation->setNote($note);
-        $evaluation->setUser($this->getUser());
-        $evaluation->setProduit($produit_get);
-        $em->persist($evaluation);
-        $em->flush();
+        // $evaluation = new Evaluation();
+        // $evaluation->setCommentaire($commentaire);
+        // $evaluation->setNote($note);
+        // $evaluation->setUser($this->getUser());
+        // $evaluation->setProduit($produit_get);
+        // $em->persist($evaluation);
+        // $em->flush();
       }
-      $produitRepository = $em->getRepository('AppBundle:Produit');
       $getEvaluation = $produitRepository->findEvaluation($produit_get, $this->getUser());
 
       // user is connected and no evaluation

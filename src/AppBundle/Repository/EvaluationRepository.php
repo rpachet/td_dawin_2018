@@ -10,4 +10,18 @@ namespace AppBundle\Repository;
  */
 class EvaluationRepository extends \Doctrine\ORM\EntityRepository
 {
+
+  public function findProductEval(){
+    $qb = $this->createQueryBuilder('e')
+    ->join('e.produit', 'p')
+    ->select( 'p.codeBarre, avg(e.note) AS note' )
+    ->groupBy('e.produit')
+    // ->groupBy('p.codeBarre')
+    ->orderBy('note', 'desc')
+    ->setMaxResults(8);
+
+    $produits = $qb->getQuery()->getResult();
+
+    return $produits;
+  }
 }
