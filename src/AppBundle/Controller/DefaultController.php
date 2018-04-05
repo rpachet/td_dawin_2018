@@ -29,34 +29,40 @@ class DefaultController extends Controller
      */
     public function indexAction(Request $request)
     {
-        $produitRepository = $em->getRepository('AppBundle:Produit');
-
-        $evaluationRepository = $em->getRepository('AppBundle:Evaluation');
-
-        $form = $this->createForm(CodeBarreType::class);
-
         $em = $this->get('doctrine')->getManager();
 
 
-        $Last = $produitRepository->findProductLast();
+        $form = $this->createForm(CodeBarreType::class);
+
+
+
+        $products = $this->getDoctrine()
+            ->getRepository(Produit::class)
+            ->findProductLast();
+
         $nameLast = [];
-        foreach ($Last as $key => $produit) {
+
+        foreach ($products as $key => $produit) {
           $code_barre =$produit->getCodeBarre();
           $data = $this->getApi($code_barre);
 
-          array_push($nameLast, ["codeBarre" => $code_barre, "nom" => $data['product']['product_name'], "image" => $data['product']['image_thumb_url']]);
+          array_push($nameLast, ["codeBarre" => $code_barre, "nom" => $data['product']['product_name'], "image" => $data['product']['image_front_small_url']]);
         }
 
-        $Eval = $evaluationRepository->findProductEval();
+        $Eval = $this->getDoctrine()
+            ->getRepository(Evaluation::class)
+            ->findProductEval();
+
+
+
         $nameEval = [];
 
         foreach ($Eval as $key => $produit) {
-          $code_barre =$produit->getCodeBarre();
+          $code_barre =$produit["codeBarre"];
           $data = $this->getApi($code_barre);
 
-          array_push($nameEval, ["codeBarre" => $code_barre, "nom" => $data['product']['product_name'], "image" => $data['product']['image_thumb_url']]);
+          array_push($nameEval, ["codeBarre" => $code_barre, "nom" => $data['product']['product_name'], "image" => $data['product']['image_front_small_url']]);
         }
-
 
         return [
             'form'      => $form->createView(),
@@ -123,7 +129,10 @@ class DefaultController extends Controller
      */
     public function productAction(Request $request)
     {
-      $produitRepository = $em->getRepository('AppBundle:Produit');
+      $em = $this->get('doctrine')->getManager();
+
+
+      $evaluationRepository = $em->getRepository('AppBundle:Evaluation');
 
       $request = Request::createFromGlobals();
       $code_barre = $request->query->get('code_barre');
@@ -133,7 +142,7 @@ class DefaultController extends Controller
       $produit['code_barre'] = $code_barre;
       $produit['name'] = $data['product']['product_name_fr'];
       $produit['brands'] = $data['product']['brands'];
-      $produit['image'] = $data['product']['image_front_url'];
+      $produit['image'] = $data['product']['image_front_small_url'];
       $produit['quantity'] = $data['product']['quantity'];
       $produit['ingredients'] = $data['product']['ingredients'];
 
@@ -170,9 +179,14 @@ class DefaultController extends Controller
       // $note = $sum/$i;
 
 
-      $note = $produitRepository->getNote($produit_get);
+      $note = $evaluationRepository->getNote($produit_get);
 
-
+      if (!empty($note)) {
+        $note = $note[0]["note"];
+      }
+      else{
+        $note = "";
+      }
 // =============================================================================
 //                          Create evaluation
 // =============================================================================
@@ -191,23 +205,9 @@ class DefaultController extends Controller
         $em->persist($user);
         $em->flush();
 
-        // $commentaire = $data['commentaire'];
-        // var_dump ($commentaire);
-        // die();
-        $note = $data['note'];
-
-        // var_dump ($this->getUser());
-        // die();
-
-        // $evaluation = new Evaluation();
-        // $evaluation->setCommentaire($commentaire);
-        // $evaluation->setNote($note);
-        // $evaluation->setUser($this->getUser());
-        // $evaluation->setProduit($produit_get);
-        // $em->persist($evaluation);
-        // $em->flush();
+        
       }
-      $getEvaluation = $produitRepository->findEvaluation($produit_get, $this->getUser());
+      $getEvaluation = $evaluationRepository->findEvaluation($produit_get, $this->getUser());
 
       // user is connected and no evaluation
       if (!$getEvaluation && $this->getUser()) {

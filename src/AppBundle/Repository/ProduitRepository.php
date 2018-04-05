@@ -11,62 +11,15 @@ namespace AppBundle\Repository;
 class ProduitRepository extends \Doctrine\ORM\EntityRepository
 {
 
-  public function findProductLast(){
-    $qb = $this->get('doctrine')->getManager()->createQueryBuilder();
-
-    $qb->select( 'p' )
-    ->from( 'AppBundle:Produit',  'p' )
+  public function findProductLast(): array{
+    $qb = $this->createQueryBuilder('p')
     ->orderBy('p.dateDerniereVue', 'desc')
-    ->setMaxResults(8);
+    ->setMaxResults(8)
+    ->getQuery();
 
-    $produits = $qb->getQuery()->getResult();
-
-    return $produits;
+    return $qb->execute();
   }
 
 
-
-
-  public function getNote($produit_get){
-    $qb = $this->get('doctrine')->getManager()->createQueryBuilder('e');
-
-    $qb->select( 'avg(e.note) AS note' )
-    ->from( 'AppBundle:Evaluation',  'e' )
-    ->where('e.produit = ?1')
-    ->setParameter(1,$produit_get)
-    ->groupBy('e.produit');
-
-    $name = [];
-
-    $note = $qb->getQuery()->getResult();
-    return $note;
-  }
-
-  public function findEvaluation($produit, $user){
-    // return $this->getEntityManager()
-    // ->createQuery(
-    //     'SELECT evaluation, p
-    //     FROM AppBundle:Evaluation evaluation
-    //     JOIN evaluation.produit p
-    //     WHERE evaluation.produit = :produit AND evaluation.user = :user'
-    //   )
-    //   ->setParameter('produit', $produit)
-    //   ->setParameter('user', $user)
-    //   ->getResult();
-
-    $qb = $this->createQueryBuilder('e');
-
-    $qb->select( 'e' )
-    ->from( 'AppBundle:Evaluation',  'e' )
-    ->join('e.produit p')
-    ->where('e.produit = :produit AND e.user = :user')
-    ->setParameter('produit', $produit)
-    ->setParameter('user', $user)
-    ->groupBy('e.produit');
-
-    $eval = $qb->getQuery()->getResult();
-
-    return $eval;
-  }
 
 }
