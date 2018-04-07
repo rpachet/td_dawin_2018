@@ -3,6 +3,7 @@
 namespace AppBundle\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
+use Doctrine\Common\Collections\ArrayCollection;
 
 /**
  * Repas
@@ -40,6 +41,22 @@ class Repas
     * @ORM\JoinColumn(name="user_id", referencedColumnName="id")
     */
     private $user;
+
+    /**
+    * @ORM\ManyToMany(targetEntity="Produit", inversedBy="repas", cascade={"persist", "merge"})
+    * @ORM\JoinTable(name="Appartenir",
+    *   joinColumns={@ORM\JoinColumn(name="idRepas", referencedColumnName="id")},
+    *   inverseJoinColumns={@ORM\JoinColumn(name="idProduit", referencedColumnName="id")}
+    * )
+    */
+    private $produits;
+
+
+
+     public function __construct()
+     {
+         $this->produits  = new ArrayCollection();
+     }
 
     /**
      * Get id
@@ -118,5 +135,40 @@ class Repas
      {
        return $this->user;
      }
+     /**
+      * Add Produit
+      *
+      * @param Produit $produit
+      */
+     public function addProduit(Produit $produit)
+     {
+         // Si l'objet fait déjà partie de la collection on ne l'ajoute pas
+         if (!$this->produits->contains($produit)) {
+             $this->produits->add($produit);
+         }
+     }
+
+     public function setProduits($items)
+      {
+          if ($items instanceof ArrayCollection || is_array($items)) {
+              foreach ($items as $item) {
+                  $this->addProduit($item);
+              }
+          } elseif ($items instanceof Produit) {
+              $this->addProduit($items);
+          } else {
+              throw new Exception("$items must be an instance of Produit or ArrayCollection");
+          }
+      }
+
+      /**
+       * Get ArrayCollection
+       *
+       * @return ArrayCollection $produits
+       */
+      public function getProduits()
+      {
+          return $this->produits;
+      }
 
 }

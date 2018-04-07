@@ -53,8 +53,19 @@ class Produit
     private $evaluations;
 
 
+    /**
+     * @var ArrayCollection Produit $repas
+     *
+     * Inverse Side
+     *
+     * @ORM\ManyToMany(targetEntity="Repas", mappedBy="produits", cascade={"persist", "merge"})
+     */
+    private $repas;
+
+
     public function __construct(){
       $this->evaluations = new ArrayCollection();
+      $this->repas = new ArrayCollection();
     }
 
     /**
@@ -157,4 +168,44 @@ class Produit
       $evaluation->setProduit($this);
       $this->evaluations->add($evaluation);
     }
+
+    /**
+     * Add Repas
+     *
+     * @param Repas $repas
+     */
+    public function addRepas(Repas $repas)
+    {
+        // Si l'objet fait déjà partie de la collection on ne l'ajoute pas
+        if (!$this->repas->contains($repas)) {
+            if (!$repas->getProduits()->contains($this)) {
+                $repas->addProduit($this);  // Lie le Repas au produit.
+            }
+            $this->repas->add($repas);
+        }
+    }
+
+    public function setRepas($items)
+    {
+        if ($items instanceof ArrayCollection || is_array($items)) {
+            foreach ($items as $item) {
+                $this->addRepas($item);
+            }
+        } elseif ($items instanceof Repas) {
+            $this->addRepas($items);
+        } else {
+            throw new Exception("$items must be an instance of Repas or ArrayCollection");
+        }
+    }
+
+    /**
+     * Get ArrayCollection
+     *
+     * @return ArrayCollection $repas
+     */
+    public function getRepas()
+    {
+        return $this->repas;
+    }
+
 }

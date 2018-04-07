@@ -241,6 +241,7 @@ class DefaultController extends Controller
     public function repasAction(Request $request){
       $em = $this->get('doctrine')->getManager();
 
+
       $repas = new Repas();
 
       $form = $this->createForm(RepasType::class, $repas);
@@ -248,7 +249,9 @@ class DefaultController extends Controller
 
       $user = $this->getUser();
 
+
       if ($form->isSubmitted() && $form->isValid()) {
+        $products = [];
         $repas = $form->getData();
         $user->addRepas($repas);
         $em->persist($user);
@@ -257,17 +260,30 @@ class DefaultController extends Controller
 
       $allRepas = $user->getRepas();
       $arrayRepas= [];
+      $arrayproducts = [];
 
       foreach ($allRepas as $key => $repas) {
         $date = $repas->getDate();
+        $id_repas = $repas->getId();
+        $products = $repas->getProduits();
+
+        foreach ($products as $key => $product) {
+          $code_barre =$product->getCodeBarre();
+          $data = $this->getApi($code_barre);
+
+          array_push($arrayproducts, ["id_repas" => $id_repas , "codeBarre" => $code_barre, "nom" => $data['product']['product_name']]);
+
+        }
         $result = $date->format('Y-m-d');
         $type = $repas->getType();
-        array_push($arrayRepas, ["date" => $result, "type" => $type]);
+        array_push($arrayRepas, ["id_repas" => $id_repas , "date" => $result, "type" => $type]);
       }
 
+
       return [
-        'form'  => $form->createView(),
-        'AllRepas' => $arrayRepas,
+        'form'        => $form->createView(),
+        'AllRepas'    => $arrayRepas,
+        'AllProducts'    => $arrayproducts,
       ];
     }
 }

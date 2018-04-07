@@ -9,7 +9,18 @@
 <div class="row">
   <ul>
     {% for repas in AllRepas %}
-      <li>{{repas['type']}} - {{repas['date']}}</li>
+      <li>
+        {{repas['type']}} - {{repas['date']}}
+        <ul>
+          {% for product in AllProducts %}
+            {% if product['id_repas'] == repas['id_repas']%}
+              <li>
+                {{product['nom']}} - {{product['codeBarre']}}
+              </li>
+            {% endif %}
+          {% endfor %}
+        </ul>
+      </li>
     {% endfor %}
   </ul>
 </div>
@@ -19,6 +30,7 @@
       {{ form_widget(form) }}
         <input type="submit" class="btn btn-primary" value="Send" />
       {{ form_end(form) }}
+
     </form>
 </div>
 {% endblock %}
