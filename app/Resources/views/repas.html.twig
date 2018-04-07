@@ -10,12 +10,12 @@
   <ul>
     {% for repas in AllRepas %}
       <li>
-        {{repas['type']}} - {{repas['date']}}
+        <b> {{repas['date']}} </b> (<i>{{repas['type']}} </i>) - {{repas['energy_repas']}} Kcal
         <ul>
           {% for product in AllProducts %}
             {% if product['id_repas'] == repas['id_repas']%}
               <li>
-                {{product['nom']}} - {{product['codeBarre']}}
+                <i>{{product['nom']}}</i> - <b> code barre</b> : <u> <a href="https://fr.openfoodfacts.org/produit/{{product['codeBarre']}}">{{product['codeBarre']}}</a></u> - {{product['energy_value']}} Kcal
               </li>
             {% endif %}
           {% endfor %}

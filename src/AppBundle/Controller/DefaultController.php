@@ -261,7 +261,7 @@ class DefaultController extends Controller
       $allRepas = $user->getRepas();
       $arrayRepas= [];
       $arrayproducts = [];
-
+      $energy_repas = 0;
       foreach ($allRepas as $key => $repas) {
         $date = $repas->getDate();
         $id_repas = $repas->getId();
@@ -270,13 +270,21 @@ class DefaultController extends Controller
         foreach ($products as $key => $product) {
           $code_barre =$product->getCodeBarre();
           $data = $this->getApi($code_barre);
+          $energy_unit = $data['product']['nutriments']['energy_unit'];
+          $energy_value = $data['product']['nutriments']['energy_value'];
 
-          array_push($arrayproducts, ["id_repas" => $id_repas , "codeBarre" => $code_barre, "nom" => $data['product']['product_name']]);
+          if ($energy_unit == "kJ") {
+            // convertion kj en kcal
+            $energy_value = $energy_value /4.1868;
+            $energy_value = round($energy_value,2);
+          }
 
+          array_push($arrayproducts, ["id_repas" => $id_repas , "codeBarre" => $code_barre, "nom" => $data['product']['product_name'], "energy_value" =>$energy_value]);
+          $energy_repas = $energy_repas + $energy_value;
         }
         $result = $date->format('Y-m-d');
         $type = $repas->getType();
-        array_push($arrayRepas, ["id_repas" => $id_repas , "date" => $result, "type" => $type]);
+        array_push($arrayRepas, ["id_repas" => $id_repas , "date" => $result, "type" => $type, "energy_repas" => $energy_repas]);
       }
 
 
