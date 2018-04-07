@@ -8,9 +8,11 @@ use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use AppBundle\Form\CodeBarreType;
+use AppBundle\Form\RepasType;
 use AppBundle\Form\EvaluationType;
 use AppBundle\Entity\Produit;
 use AppBundle\Entity\Evaluation;
+use AppBundle\Entity\Repas;
 
 
 class DefaultController extends Controller
@@ -166,18 +168,6 @@ class DefaultController extends Controller
 // =============================================================================
 //                          Note
 // =============================================================================
-      // $sum = 0;
-      // $i = 0;
-      //
-      // $getAll_note = $em->getRepository(Evaluation::class)->findBy(
-      //   array('produit' => $produit_get)
-      // );
-      // foreach ($getAll_note as $key => $produits) {
-      //   $sum = $sum + $produits->getNote();
-      //   $i++;
-      // }
-      // $note = $sum/$i;
-
 
       $note = $evaluationRepository->getNote($produit_get);
 
@@ -205,7 +195,7 @@ class DefaultController extends Controller
         $em->persist($user);
         $em->flush();
 
-        
+
       }
       $getEvaluation = $evaluationRepository->findEvaluation($produit_get, $this->getUser());
 
@@ -244,5 +234,40 @@ class DefaultController extends Controller
         ];
       }
     }
+    /**
+     * @Route("/repas", name="repas")
+     * @Template("repas.html.twig")
+     */
+    public function repasAction(Request $request){
+      $em = $this->get('doctrine')->getManager();
 
+      $repas = new Repas();
+
+      $form = $this->createForm(RepasType::class, $repas);
+      $form->handleRequest($request);
+
+      $user = $this->getUser();
+
+      if ($form->isSubmitted() && $form->isValid()) {
+        $repas = $form->getData();
+        $user->addRepas($repas);
+        $em->persist($user);
+        $em->flush();
+      }
+
+      $allRepas = $user->getRepas();
+      $arrayRepas= [];
+
+      foreach ($allRepas as $key => $repas) {
+        $date = $repas->getDate();
+        $result = $date->format('Y-m-d');
+        $type = $repas->getType();
+        array_push($arrayRepas, ["date" => $result, "type" => $type]);
+      }
+
+      return [
+        'form'  => $form->createView(),
+        'AllRepas' => $arrayRepas,
+      ];
+    }
 }
