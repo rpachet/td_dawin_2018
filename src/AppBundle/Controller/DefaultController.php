@@ -173,10 +173,12 @@ class DefaultController extends Controller
 
       if (!empty($note)) {
         $note = $note[0]["note"];
+        $note = round($note,2);
       }
       else{
         $note = "";
       }
+
 // =============================================================================
 //                          Create evaluation
 // =============================================================================
