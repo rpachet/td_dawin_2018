@@ -1,4 +1,4 @@
-# Projet PHP - Dawin ALT
+# Projet PHP Symfony - Dawin ALT
 
 ## Installer le projet
 
